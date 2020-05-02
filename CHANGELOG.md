@@ -1,5 +1,11 @@
 # Change Log
 
+## 1.7.0
+  - Moved IAR settings into the settings.json file.
+  - Added auto detection of the project file.
+  - Added auto detection of the project configuration.
+  - Added a verbose mode to see all the output of the build. 
+
 ## 1.6.0
   - Add iar.json file saved event 
   

@@ -5,27 +5,24 @@ As IAR works on Windows environment only, the extension is not been tested on di
 
 This is NOT an official IAR Systems extension.
 
+Based on the extension from Leonardo politoleo (https://github.com/politoleo/iar).
+
 ## Getting Started:
 
-### 1) Create `iar.json` file inside `.vscode` folder:
-Example `iar.json` configuration, customize it according to your setup:
+### 1) Enable the extension on your workspace settings, `settings.json` file inside `.vscode` folder:
 ```javascript
 {
-    "version": 1,
-    "path": "C:\\Program Files (x86)\\IAR Systems\\Embedded Workbench 8.0\\",
-    "project": "C:\\Projects\\TEST\\TEST.ewp",
-    "config": "Debug"
+    "iar.enabled":true,
+    "iar.settings": {
+        "path": "C:\\Program Files (x86)\\IAR Systems\\Embedded Workbench 8.2\\",
+        "project": null,
+        "config": null
+    },
 }
 ```
+If you have multiple project files or multiple configurations and it is not finding the project/configuration that you want to use. you can update the 'project' and 'config' with the appropriate values.
 
-### 2) Enable the extension on your workspace settings, `settings.json` file inside `.vscode` folder:
-```javascript
-{
-    "iar.enabled":true
-}
-```
-
-### 3) Run `ctrl+shift+b` to start build.
+### 2) Run `ctrl+shift+b` to start build.
 
 The extension automatically replaces your `c_cpp_properties.json` [Microsoft C++ Tools][cpptools] configuration to matches the IAR Project ones.
 It supports browsing to external files, includepath, common defines and user included one.
