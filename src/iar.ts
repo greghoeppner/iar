@@ -1,29 +1,43 @@
-const vscode = require('vscode');
-const ch = require('child_process');
-const fs = require('fs');
-const path = require('path');
-const os = require('os');
+import * as vscode from 'vscode';
+import * as ch from 'child_process';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as os from 'os';
 
-class Iar {
+export class Iar {
+    private path:string;
+    private project:string;
+    private config:string;
+    private folder:string;
+    private errors:any;
+    private warnings:any;
+    private terminal: vscode.OutputChannel;
+    private problems: any;
+    private commands: any;
+    private includes: any;
+    private defines: any;
+    private browse: any;
+    private progress: boolean;
+    private verbose: boolean;
 
-    constructor(path, project, config, folder) {
+    constructor(path: string, project: string, config: string, folder: string) {
         this.path = path;
         this.project = project;
         this.config = config;
         this.folder = folder;
         this.errors = -1;
         this.warnings = -1;
-        this.terminal = undefined;
+        this.terminal = vscode.window.createOutputChannel('IAR');
         this.problems = [];
         this.commands = [];
         this.includes = [];
         this.defines = [];
         this.browse = [];
         this.progress = false;
-        this.projectname = '';
+        this.verbose = false;
     }
 
-    build_database_args(cmd) {
+    buildDatabaseArgs(cmd: string) {
         cmd += " --predef_macros"
         var next = 1;
         var arg_fixed = cmd.replace(/([a-zA-Z]:\\.*?)( -\S|$)/gm, "\"$1\"$2");
@@ -47,8 +61,8 @@ class Iar {
         return args;
     }
 
-    build_database_single(cmd, inc, def) {
-        var args = this.build_database_args(cmd);
+    buildDatabaseSingle(cmd: string, inc: string[], def: string[]) {
+        var args = this.buildDatabaseArgs(cmd);
         var defs;
         var tmpfile = os.tmpdir() + "\\" + path.basename(args[2].replace("\"", "")) + ".tmp";
         args.push(tmpfile);
@@ -61,7 +75,6 @@ class Iar {
         }
 
         if (fs.existsSync(tmpfile)) {
-
             def.push("_Pragma(x) =");
             def.push("__nounwind =");
             def.push("__absolute =");
@@ -95,15 +108,15 @@ class Iar {
         }
     }
 
-    build_database() {
+    buildDatabase() {
         var i = 0;
         if (this.commands.length > 0) {
-            var inc = [];
-            var def = [];
+            var inc: string[] = [];
+            var def: string[] = [];
             var tmpfile = os.tmpdir() + "\\temp1234.c";
             fs.writeFileSync(tmpfile, "#include <stdio.h>\nint main(void) {return 0}\n");
             var command = tmpfile + " " + this.commands[i][2]
-            this.build_database_single(command, inc, def);
+            this.buildDatabaseSingle(command, inc, def);
             fs.unlinkSync(tmpfile);
             for (var j = 0, inc_len = inc.length; j < inc_len; j++) {
                 var tmp = path.normalize(inc[j]);
@@ -117,7 +130,7 @@ class Iar {
         }
     }
 
-    parse_build_output(build_output) {
+    parseBuildOutput(build_output: string) {
         var temp;
 
         //Check specific error or warning
@@ -157,7 +170,7 @@ class Iar {
         }
     }
 
-    build_database_config() {
+    buildDatabaseConfig() {
         if (this.defines.length > 0 || this.includes.length > 0) {
 
             for (var i = 0, len = this.includes.length; i < len; i++) {
@@ -166,7 +179,7 @@ class Iar {
             }
 
             var name = this.folder + '\\.vscode\\c_cpp_properties.json';
-            var browse_config = {
+            var browseConfig = {
                 path: this.browse,
                 limitSymbolsToIncludedHeaders: true,
                 databaseFilename: ".vscode/browse.db"
@@ -176,7 +189,7 @@ class Iar {
                 name: "IAR",
                 intelliSenseMode: "clang-x64",
                 compilerPath:"",
-                browse: browse_config,
+                browse: browseConfig,
                 includePath: this.includes,
                 defines: this.defines
             }
@@ -193,14 +206,13 @@ class Iar {
         }
     }
 
-    parse_project() {
+    parseProject() {
         if (fs.existsSync(this.project)) {
             var temp;
             var buffer = fs.readFileSync(this.project);
-            var filetag = [];
             var regex = new RegExp("<file>[\\s\\S]*?<name>([\\s\\S]*?)<\\/name>[\\s\\S]*?<\\/file>", "gm");
             var proj_dir = path.dirname(this.project);
-            while (temp = regex.exec(buffer)) {
+            while (temp = regex.exec(buffer.toString())) {
                 var browsedir = path.dirname(path.normalize(temp[1].replace("$PROJ_DIR$", proj_dir))) + "\\";
                 if (this.browse.indexOf(browsedir) < 0)
                     this.browse.push(browsedir);
@@ -208,14 +220,16 @@ class Iar {
         }
     }
 
-    in_progress() {
+    setVerbose(value: boolean) {
+        this.verbose = value;
+    }
+    
+    inProgress() {
         return this.progress;
     }
 
     build() {
-
         var iar = this;
-
         iar.errors = -1;
         iar.warnings = -1;
         iar.problems = [];
@@ -225,47 +239,48 @@ class Iar {
         iar.browse = [];
         iar.progress = true;
 
-        iar.parse_project();
+        iar.parseProject();
 
-        if(!iar.terminal)
-            iar.terminal = vscode.window.createOutputChannel('IAR');
         iar.terminal.show();
 		iar.terminal.clear();
 		vscode.workspace.saveAll(false);
 
-        iar.terminal.appendLine('Building configuration: ' + iar.config);
+        iar.terminal.appendLine('Building project: ' + iar.project + ' configuration: ' + iar.config);
         
         var task = os.cpus().length;
 
-        var args = [iar.project.split("\\").join("\\\\"), '-make', iar.config ,'-log', 'all', '-parallel', task];
-        var out = ch.spawn(iar.path + "common\\bin\\IarBuild.exe", args, {
-            stdio: ['ignore', 'pipe', 'ignore']
-        });
+        var args: string[] = [iar.project.split("\\").join("\\\\"), '-make', iar.config ,'-log', 'all', '-parallel', task.toString()];
+        var out = ch.spawn(iar.path + "common\\bin\\IarBuild.exe", args, { stdio: ['ignore', 'pipe', 'ignore'] });
 
-        var build_output = '';
-        out.stdout.on('data', function (data) {
+        var buildOutput = '';
+        out.stdout.on('data', function (data: any) {
             var buffer = data;
-            var temp;
-            var asm_regex = new RegExp("^iasmarm.exe (.*\\.s) (.*)$", "gmi");
-            while (temp = asm_regex.exec(buffer)) {
-                iar.terminal.appendLine(path.basename(temp[1]));
+            if (iar.verbose) {
+                iar.terminal.append(buffer.toString());
+            } else {
+                var temp;
+                var asm_regex = new RegExp("^iasmarm.exe (.*\\.s) (.*)$", "gmi");
+                while (temp = asm_regex.exec(buffer)) {
+                    iar.terminal.appendLine(path.basename(temp[1]));
+                }
+                var icc_regex = new RegExp("^iccarm.exe (.*\\.c|.*\\.cpp) (.*)$", "gmi");
+                while (temp = icc_regex.exec(buffer)) {
+                    iar.terminal.appendLine(path.basename(temp[1]));
+                }
+                var link_regex = new RegExp("^ilinkarm.exe.*\\.o.*$", "gmi");
+                if (temp = link_regex.exec(buffer)) {
+                    iar.terminal.appendLine(' ');
+                    iar.terminal.appendLine("Linking...");
+                }
             }
-            var icc_regex = new RegExp("^iccarm.exe (.*\\.c|.*\\.cpp) (.*)$", "gmi");
-            while (temp = icc_regex.exec(buffer)) {
-                iar.terminal.appendLine(path.basename(temp[1]));
-            }
-            var link_regex = new RegExp("^ilinkarm.exe.*\\.o.*$", "gmi");
-            if (temp = link_regex.exec(buffer)) {
-                iar.terminal.appendLine(' ');
-                iar.terminal.appendLine("Linking...");
-            }
-            build_output += buffer;
+            buildOutput += buffer;
         });
 
-        out.on('close', function (code) {
-
-            if (build_output) {
-                iar.parse_build_output(build_output);
+        out.on('close', function (code: number) {
+            console.log('IAR build result: ' + code.toString());
+            
+            if (buildOutput) {
+                iar.parseBuildOutput(buildOutput);
 
                 if (iar.problems.length > 0) {
                     iar.terminal.appendLine(' ');
@@ -277,8 +292,8 @@ class Iar {
                 if (iar.errors >= 0 || iar.warnings >= 0) {
                     iar.terminal.appendLine(' ');
                     iar.terminal.appendLine('Building database...');
-                    iar.build_database();
-                    iar.build_database_config();
+                    iar.buildDatabase();
+                    iar.buildDatabaseConfig();
                     iar.terminal.appendLine(' ');
 
                     iar.terminal.appendLine('Errors: ' + iar.errors);
@@ -294,10 +309,11 @@ class Iar {
             iar.progress = false;
         })
 
-        out.on('error', function (data) {
+        out.on('error', function (data: Error) {
+            console.log('IAR build error message: ' + data.message);
+            
             iar.terminal.appendLine('Error while starting IarBuild.exe. Open it with IAR Ide to fix it.');
         })
     }
 }
 
-module.exports = Iar;

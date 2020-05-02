@@ -2,11 +2,11 @@
 	"name": "iar",
 	"displayName": "IAR Embedded Workbench",
 	"icon": "icon.png",
-	"description": "Provide Intellisense and Build support for IAR Embedded Workbench IDE",
-	"version": "1.6.0",
-	"publisher": "politoleo",
+	"description": "Provide Intellisense and Build support for IAR Embedded Workbench IDE. Based on extension: https://github.com/politoleo/iar",
+	"version": "1.7.0",
+	"publisher": "greghoeppner",
 	"engines": {
-		"vscode": "^1.18.0"
+		"vscode": "^1.43.0"
 	},
 	"categories": [
 		"Other"
@@ -16,9 +16,9 @@
 	],
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/politoleo/iar.git"
+		"url": "https://github.com/greghoeppner/iar"
 	},
-	"main": "./src/main",
+	"main": "./out/main.js",
 	"contributes": {
 		"commands": [
 			{
@@ -41,23 +41,68 @@
 					"type": "boolean",
 					"default": false,
 					"description": "Enable IAR extension."
+				},
+				"iar.verbose": {
+					"type": "boolean",
+					"default": false,
+					"description": "Enable verbose output in the IAR terminal."
+				},
+				"iar.settings": {
+					"type": "object",
+					"description": "The configuration options",
+					"properties": {
+						"path": {
+							"type": "string",
+							"description": "The path of the IAR Embedded Workbench",
+							"default": "C:\\Program Files (x86)\\IAR Systems\\Embedded Workbench 8.2\\"
+						},
+						"project": {
+							"type": [
+								"string",
+								"null"
+							],
+							"description": "The path of the IAR project file (project.ewp)",
+							"default": "${workspaceFolder}\\project.ewp"
+						},
+						"config": {
+							"type": [
+								"string",
+								"null"
+							],
+							"description": "The name of the default configuration to build with (eg. Debug)",
+							"default": "Debug"
+						}
+					},
+					"default": {
+						"path": "C:\\Program Files (x86)\\IAR Systems\\Embedded Workbench 8.2\\",
+						"project": null,
+						"config": null
+					}
 				}
 			}
 		}
 	},
 	"scripts": {
-		"postinstall": "node ./node_modules/vscode/bin/install"
+		"vscode:prepublish": "npm run compile",
+		"compile": "tsc -p ./",
+		"lint": "eslint src --ext ts",
+		"watch": "tsc -watch -p ./"
 	},
 	"devDependencies": {
-		"typescript": "^2.6.1",
-		"vscode": "^1.1.6",
-		"eslint": "^4.6.1",
-		"@types/node": "^7.0.43",
-		"@types/mocha": "^2.2.42"
+		"@types/glob": "^7.1.1",
+		"@types/mocha": "^7.0.1",
+		"@types/node": "^12.11.7",
+		"@types/vscode": "^1.43.0",
+		"eslint": "^6.8.0",
+		"@typescript-eslint/parser": "^2.18.0",
+		"@typescript-eslint/eslint-plugin": "^2.18.0",
+		"glob": "^7.1.6",
+		"mocha": "^7.0.1",
+		"typescript": "^3.7.5",
+		"vscode-test": "^1.3.0"
 	},
-	"__metadata": {
-		"id": "8e4967c3-c5a3-4f54-adf9-83f7daaff7db",
-		"publisherDisplayName": "Leonardo Polito",
-		"publisherId": "ae8a33b2-c6ae-4f52-9d5e-110b0065517e"
+	"dependencies": {
+		"@types/xml2js": "^0.4.5",
+		"xml2js": "^0.4.23"
 	}
 }
