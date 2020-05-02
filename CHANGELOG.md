@@ -1,5 +1,8 @@
 # Change Log
 
+## 1.7.1
+  - Added auto detection of the IAR installation path.
+ 
 ## 1.7.0
   - Moved IAR settings into the settings.json file.
   - Added auto detection of the project file.

@@ -22,11 +22,30 @@ export async function activate(context: vscode.ExtensionContext) {
         var iarConfig = vscode.workspace.getConfiguration("iar");
         var settings = vscode.workspace.getConfiguration("iar.settings");
         var path = settings.path as string;
+        var settingsUpdated = false;
+        
+        if (path == null) {
+            try {
+                var dir = fs.readdirSync("C:\\Program Files (x86)\\IAR Systems", {withFileTypes: true})
+                    .filter(file => file.isDirectory && file.name.toUpperCase().startsWith("EMBEDDED WORKBENCH"));
+                if (dir.length > 0) {
+                    path = "C:\\Program Files (x86)\\IAR Systems" + "\\" + dir[0].name + "\\";
+                    settingsUpdated = true;
+                }
+            } catch (e) {
+                console.log(e.message);
+            }
+        }
+
+        if (!fs.existsSync(path)) {
+            vscode.window.showInformationMessage("Unable to locate the IAR installation directory");
+        }
 
         var project = "";
         if (settings.project == null) {
             await vscode.workspace.findFiles("*.ewp").then((value) => {
                 project = value[0].fsPath;
+                settingsUpdated = true;
             })
         } else {
             project = settings.project as string;
@@ -40,6 +59,7 @@ export async function activate(context: vscode.ExtensionContext) {
         var config = "";
         if (!settings.has("config") || settings.config == null) {
             config = await parseProjectForConfig(project);
+            settingsUpdated = true;
         } else {
             config = settings.config as string;
         }
@@ -47,6 +67,14 @@ export async function activate(context: vscode.ExtensionContext) {
         if (config === "") {
             vscode.window.showInformationMessage("Unable to locate the project configuration");
             return;
+        }
+
+        if (settingsUpdated) {
+            iarConfig
+                .update("settings", { path: path, project: project, config: config }, vscode.ConfigurationTarget.Workspace)
+                .then(undefined, (reason) => {
+                    console.log("Unable to update the IAR path: " + reason);
+            });
         }
 
         if (typeof iar === 'undefined' || iar === null) { 

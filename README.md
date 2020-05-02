@@ -13,14 +13,19 @@ Based on the extension from Leonardo politoleo (https://github.com/politoleo/iar
 ```javascript
 {
     "iar.enabled":true,
-    "iar.settings": {
-        "path": "C:\\Program Files (x86)\\IAR Systems\\Embedded Workbench 8.2\\",
-        "project": null,
-        "config": null
-    },
 }
 ```
 If you have multiple project files or multiple configurations and it is not finding the project/configuration that you want to use. you can update the 'project' and 'config' with the appropriate values.
+```javascript
+{
+  "iar.enabled":true,
+  "iar.settings": {
+        "path": "C:\\Program Files (x86)\\IAR Systems\\Embedded Workbench 8.2\\",
+        "project": "d:\\work\\HomeSystemEmbedded\\home_system.ewp",
+        "config": "Debug"
+    }
+}
+```
 
 ### 2) Run `ctrl+shift+b` to start build.
 

@@ -3,7 +3,7 @@
 	"displayName": "IAR Embedded Workbench",
 	"icon": "icon.png",
 	"description": "Provide Intellisense and Build support for IAR Embedded Workbench IDE. Based on extension: https://github.com/politoleo/iar",
-	"version": "1.7.0",
+	"version": "1.7.1",
 	"publisher": "greghoeppner",
 	"engines": {
 		"vscode": "^1.43.0"
@@ -52,9 +52,12 @@
 					"description": "The configuration options",
 					"properties": {
 						"path": {
-							"type": "string",
+							"type": [
+								"string",
+								"null"
+							],
 							"description": "The path of the IAR Embedded Workbench",
-							"default": "C:\\Program Files (x86)\\IAR Systems\\Embedded Workbench 8.2\\"
+							"default": null
 						},
 						"project": {
 							"type": [
@@ -74,7 +77,7 @@
 						}
 					},
 					"default": {
-						"path": "C:\\Program Files (x86)\\IAR Systems\\Embedded Workbench 8.2\\",
+						"path": null,
 						"project": null,
 						"config": null
 					}
