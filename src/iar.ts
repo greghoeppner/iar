@@ -178,6 +178,10 @@ export class Iar {
                     this.browse.push(this.includes[i]);
             }
 
+            // Put the system includes at the end
+            this.includes.sort((item1: string, item2: string) => this.sortIncludes(item1, item2));
+            this.browse.sort((item1: string, item2: string) => this.sortIncludes(item1, item2));
+
             var name = this.folder + '\\.vscode\\c_cpp_properties.json';
             var browseConfig = {
                 path: this.browse,
@@ -204,6 +208,21 @@ export class Iar {
             }
             fs.writeFileSync(name, JSON.stringify(properties, null, 4));
         }
+    }
+
+    private sortIncludes(item1: string, item2: string): number {
+        var item1IsSystemInclude = item1.toUpperCase().startsWith(this.path.toUpperCase());
+        var item2IsSystemInclude = item2.toUpperCase().startsWith(this.path.toUpperCase());
+
+        if (item1IsSystemInclude && !item2IsSystemInclude) {
+            return 1;
+        }
+
+        if (!item1IsSystemInclude && item2IsSystemInclude) {
+            return -1;
+        }
+
+        return 0;
     }
 
     parseProject() {

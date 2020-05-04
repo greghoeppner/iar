@@ -3,7 +3,7 @@
 	"displayName": "IAR Embedded Workbench",
 	"icon": "icon.png",
 	"description": "Provide Intellisense and Build support for IAR Embedded Workbench IDE. Based on extension: https://github.com/politoleo/iar",
-	"version": "1.7.1",
+	"version": "1.7.2",
 	"publisher": "greghoeppner",
 	"engines": {
 		"vscode": "^1.43.0"

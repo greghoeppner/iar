@@ -1,5 +1,8 @@
 # Change Log
 
+## 1.7.2
+  - Sorted includes so the system includes are always last.
+ 
 ## 1.7.1
   - Added auto detection of the IAR installation path.
  
