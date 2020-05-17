@@ -1,104 +1,58 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
-import * as Iar from './iar';
-import * as xml2js from 'xml2js';
+import { IarBuildTaskProvider } from './iarTaskProvider';
 
-var iar: Iar.Iar | undefined = undefined;
+let iarTaskProvider: vscode.Disposable | undefined;
 
-function resolve(path: string) {
-    var folder = vscode.workspace.rootPath ?? "";
-    var out = path.split("${workspaceRoot}").join(folder);
-    out = out.split("${workspaceFolder}").join(folder);
-    return out;
-}
-
-export async function activate(context: vscode.ExtensionContext) {
-    if (!vscode.workspace.rootPath)
+export function activate(context: vscode.ExtensionContext) {
+    if (!vscode.workspace.workspaceFolders)
         return;
 
-    var folder = vscode.workspace.rootPath;
+    var folder = vscode.workspace.workspaceFolders[0].uri.fsPath;
+    var iarConfig = vscode.workspace.getConfiguration("iar");
 
-    let disposable = vscode.commands.registerCommand('iar.build', async function () {
-        var iarConfig = vscode.workspace.getConfiguration("iar");
-        var settings = vscode.workspace.getConfiguration("iar.settings");
-        var path = settings.path as string;
-        var settingsUpdated = false;
-        
-        if (path == null) {
-            try {
-                var dir = fs.readdirSync("C:\\Program Files (x86)\\IAR Systems", {withFileTypes: true})
-                    .filter(file => file.isDirectory && file.name.toUpperCase().startsWith("EMBEDDED WORKBENCH"));
-                if (dir.length > 0) {
-                    path = "C:\\Program Files (x86)\\IAR Systems" + "\\" + dir[0].name + "\\";
-                    settingsUpdated = true;
-                }
-            } catch (e) {
-                console.log(e.message);
+    autoDetectInstallationFolder(iarConfig);
+    autoDetectProjectFile(iarConfig);
+
+    iarTaskProvider = vscode.tasks.registerTaskProvider(IarBuildTaskProvider.IarBuildScriptType, new IarBuildTaskProvider(folder));
+}
+
+function autoDetectInstallationFolder(config: vscode.WorkspaceConfiguration) {
+    var path = config.installationPath;
+    if (path == null) {
+        try {
+            var dir = fs.readdirSync("C:\\Program Files (x86)\\IAR Systems", {withFileTypes: true})
+                .filter(file => file.isDirectory && file.name.toUpperCase().startsWith("EMBEDDED WORKBENCH"));
+            if (dir.length > 0) {
+                path = "C:\\Program Files (x86)\\IAR Systems" + "\\" + dir[0].name + "\\";
+                config
+                    .update("installationPath", path, vscode.ConfigurationTarget.Workspace)
+                    .then(undefined, (reason) => {
+                        console.log("Unable to update the IAR path: " + reason);
+                    });
             }
+        } catch (e) {
+            console.log(e.message);
         }
+    }
+}
 
-        if (!fs.existsSync(path)) {
-            vscode.window.showInformationMessage("Unable to locate the IAR installation directory");
-        }
-
-        var project = "";
-        if (settings.project == null) {
-            await vscode.workspace.findFiles("*.ewp").then((value) => {
-                project = value[0].fsPath;
-                settingsUpdated = true;
-            })
-        } else {
-            project = settings.project as string;
-        }
-
-        if (!fs.existsSync(project)) {
-            vscode.window.showInformationMessage("Unable to locate an EWARM project file (.ewp)");
-            return;
-        }
-
-        var config = "";
-        if (!settings.has("config") || settings.config == null) {
-            config = await parseProjectForConfig(project);
-            settingsUpdated = true;
-        } else {
-            config = settings.config as string;
-        }
-
-        if (config === "") {
-            vscode.window.showInformationMessage("Unable to locate the project configuration");
-            return;
-        }
-
-        if (settingsUpdated) {
-            iarConfig
-                .update("settings", { path: path, project: project, config: config }, vscode.ConfigurationTarget.Workspace)
+async function autoDetectProjectFile(config:vscode.WorkspaceConfiguration) {
+    var project = config.projectFile;
+    if (project == null) {
+        await vscode.workspace.findFiles("*.ewp").then((value) => {
+            project = value[0].fsPath;
+            config
+                .update("projectFile", project, vscode.ConfigurationTarget.Workspace)
                 .then(undefined, (reason) => {
-                    console.log("Unable to update the IAR path: " + reason);
-            });
-        }
-
-        if (typeof iar === 'undefined' || iar === null) { 
-            iar = new Iar.Iar(resolve(path), resolve(project), config, folder);
-        }
-
-        if(iar.inProgress() == false) {
-            iar.setVerbose(iarConfig.verbose);
-            iar.build();
-        }
-    });
-
-    context.subscriptions.push(disposable);
+                    console.log("Unable to update the project path: " + reason);
+                });
+        })
+    }
 }
 
-async function parseProjectForConfig(projectFile: any): Promise<string> {
-    let projectXml = fs.readFileSync(projectFile, "utf8");
-
-    return await xml2js.parseStringPromise(projectXml).then((projectData) => {
-        if (projectData.project.hasOwnProperty("configuration")) {
-            return projectData.project.configuration[0].name[0] as string;
-        }
-        return "";
-    });
+export function deactivate() { 
+    if (iarTaskProvider) {
+        iarTaskProvider.dispose();
+    }
 }
-
-export function deactivate() { }

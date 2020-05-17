@@ -3,7 +3,7 @@
 	"displayName": "IAR Embedded Workbench",
 	"icon": "icon.png",
 	"description": "Provide Intellisense and Build support for IAR Embedded Workbench IDE. Based on extension: https://github.com/politoleo/iar",
-	"version": "1.7.2",
+	"version": "2.0.0",
 	"publisher": "greghoeppner",
 	"engines": {
 		"vscode": "^1.43.0"
@@ -12,7 +12,7 @@
 		"Other"
 	],
 	"activationEvents": [
-		"onCommand:iar.build"
+		"workspaceContains:*.ewp"
 	],
 	"repository": {
 		"type": "git",
@@ -20,67 +20,49 @@
 	},
 	"main": "./out/main.js",
 	"contributes": {
-		"commands": [
+		"taskDefinitions": [
 			{
-				"command": "iar.build",
-				"title": "IAR: Build Project"
-			}
-		],
-		"keybindings": [
-			{
-				"command": "iar.build",
-				"key": "ctrl+shift+B",
-				"when": "!inDebugMode && config.iar.enabled"
+				"type": "iar",
+				"required": [
+					"configuration",
+					"buildType"
+				],
+				"properties": {
+					"configuration": {
+						"type": "string",
+						"description": "The IAR build configuration"
+					},
+					"buildType": {
+						"type": "string",
+						"enum": ["make", "build", "clean"],
+						"description": "Build type (make - bring build up to date, build - rebuilds and relinks all files, clean - removes any intermediate and output files"
+					},
+					"verbose": {
+						"type": "boolean",
+						"description": "Enable/disable verbose mode for outputting all build information"
+					}
+				}
 			}
 		],
 		"configuration": {
 			"type": "object",
 			"title": "IAR Configuration",
 			"properties": {
-				"iar.enabled": {
-					"type": "boolean",
-					"default": false,
-					"description": "Enable IAR extension."
+				"iar.installationPath": {
+					"type": [
+						"string",
+						"null"
+					],
+					"description": "The path of the IAR Embedded Workbench installation",
+					"default": null
 				},
-				"iar.verbose": {
-					"type": "boolean",
-					"default": false,
-					"description": "Enable verbose output in the IAR terminal."
-				},
-				"iar.settings": {
-					"type": "object",
-					"description": "The configuration options",
-					"properties": {
-						"path": {
-							"type": [
-								"string",
-								"null"
-							],
-							"description": "The path of the IAR Embedded Workbench",
-							"default": null
-						},
-						"project": {
-							"type": [
-								"string",
-								"null"
-							],
-							"description": "The path of the IAR project file (project.ewp)",
-							"default": "${workspaceFolder}\\project.ewp"
-						},
-						"config": {
-							"type": [
-								"string",
-								"null"
-							],
-							"description": "The name of the default configuration to build with (eg. Debug)",
-							"default": "Debug"
-						}
-					},
-					"default": {
-						"path": null,
-						"project": null,
-						"config": null
-					}
+				"iar.projectFile": {
+					"type": [
+						"string",
+						"null"
+					],
+					"description": "The path of the IAR project file (eg. project.ewp)",
+					"default": null
 				}
 			}
 		}

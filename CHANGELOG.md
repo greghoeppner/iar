@@ -1,5 +1,11 @@
 # Change Log
 
+## 2.0.0
+  - **Breaking change**
+  - Simplified the settings for the extension (see contributes for more details).
+  - Integrated the extension in with the build tasks instead of custom command.
+  - Note: there is still an issue using the custom executer task for building so still using an output window until it is fixed.
+ 
 ## 1.7.2
   - Sorted includes so the system includes are always last.
  

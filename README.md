@@ -5,27 +5,25 @@ As IAR works on Windows environment only, the extension is not been tested on di
 
 This is NOT an official IAR Systems extension.
 
-Based on the extension from Leonardo politoleo (https://github.com/politoleo/iar).
+Based on the extension from Leonardo Polito (https://github.com/politoleo/iar).
 
 ## Getting Started:
 
-### 1) Enable the extension on your workspace settings, `settings.json` file inside `.vscode` folder:
+### 1) The extension will try to auto detect the IAR installation path and the project file. 
+
+If you have multiple project files or an odd installation path, please update the following configuration options in the settings.json file as seen below.
 ```javascript
 {
-    "iar.enabled":true,
+    "iar.installationPath": "C:\\Program Files (x86)\\IAR Systems\\Embedded Workbench 8.2\\",
+    "projectFile": "d:\\work\\HomeSystemEmbedded\\home_system.ewp"
 }
 ```
-If you have multiple project files or multiple configurations and it is not finding the project/configuration that you want to use. you can update the 'project' and 'config' with the appropriate values.
-```javascript
-{
-  "iar.enabled":true,
-  "iar.settings": {
-        "path": "C:\\Program Files (x86)\\IAR Systems\\Embedded Workbench 8.2\\",
-        "project": "d:\\work\\HomeSystemEmbedded\\home_system.ewp",
-        "config": "Debug"
-    }
-}
-```
+
+### 2) Now required to configure your build task. 
+
+1) Use the shift+ctrl+p and select Tasks: Configure default build task. 
+
+2) Select the configuration from your IAR project and build type ('make' - Incremental, 'Build' - Full build everytime, or 'clean' - just cleans your output files). 
 
 ### 2) Run `ctrl+shift+b` to start build.
 
