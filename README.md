@@ -15,7 +15,7 @@ If you have multiple project files or an odd installation path, please update th
 ```javascript
 {
     "iar.installationPath": "C:\\Program Files (x86)\\IAR Systems\\Embedded Workbench 8.2\\",
-    "projectFile": "d:\\work\\HomeSystemEmbedded\\home_system.ewp"
+    "iar.projectFile": "d:\\work\\HomeSystemEmbedded\\home_system.ewp"
 }
 ```
 
