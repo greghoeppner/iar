@@ -1,5 +1,8 @@
 # Change Log
 
+## 2.0.1
+  - Small update to the documentation provided by DonPavlov.
+
 ## 2.0.0
   - **Breaking change**
   - Simplified the settings for the extension (see contributes for more details).
